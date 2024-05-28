@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SOURCES 
   "main.cpp" 
+  "logs.cpp" 
   )
 add_executable(${PROJECT_NAME} ${SOURCES})
 
