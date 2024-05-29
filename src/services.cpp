@@ -3,6 +3,7 @@
 #include <pistache/router.h>
 
 #include "user.h" 
+#include "generator.h"
 #include "services.h"
 #include "logs.h"
 #include <fstream>
@@ -84,12 +85,61 @@ std::string Services::url_decode(std::string body_str)
     return body_str;
 }
 
+bool Services::is_valid_session(const Request &request)
+{ 
+    Logs::write_log_data("              function: is_valid_session");
+
+    try 
+    {
+        auto cookies = request.cookies();
+
+        auto cookie = cookies.get("login_cookie");
+        std::string cookie_token = cookie.value;
+        Logs::write_log_data("              function: is_valid_session, cookie token: " + cookie_token);
+
+        if (Users::check_cookie(cookie.value, "../../db/Users.db3"))
+        {
+            Logs::write_log_data("              function: is_valid_session, return: true");
+
+            return true;
+        }
+    } 
+    catch (std::exception &e) 
+    {
+        Logs::write_log_data("              function: is_valid_session");
+        return false;
+    }
+
+    return false;
+}
+
+Pistache::Http::Cookie Services::login_cookie_generator(std::string email)
+{
+    Logs::write_log_data("              function: login_cookie_generator");
+
+    std::string cookie_value = Generators::random_number_generator(5);
+ 
+    Pistache::Http::Cookie cookie("login_cookie", cookie_value);
+
+    Users::insert_cookie(email, cookie_value, "../../db/Users.db3");
+    
+    cookie.maxAge.emplace(3600);
+
+    return cookie;
+}
 
 void Services::get_login_site(const Request &request, Response response)
 {
     try 
     {
         Logs::write_log_data(" GET request, function: get_login_site");
+
+        if(is_valid_session(request))
+        {
+            response.headers().add<Pistache::Http::Header::Location>("/chatsite");
+            response.send(Pistache::Http::Code::See_Other);
+        }
+ 
         const std::string uri = request.resource();
 
         std::string htmlContent;
@@ -156,6 +206,7 @@ void Services::login_handler(const Request &request, Response response)
         else
         {
             response.headers().add<Pistache::Http::Header::Location>("/chatsite");
+            response.cookies().add(login_cookie_generator(email_addres));
             response.headers().addRaw(Pistache::Http::Header::Raw{"HX-Redirect", ""});
             response.send(Pistache::Http::Code::See_Other);
         }
@@ -184,6 +235,20 @@ void Services::get_chat_site(const Request &request, Response response)
     try {
         Logs::write_log_data(" GET request, function: get_chat_site");
 
+        auto cookies = request.cookies();
+
+        if(!cookies.has("login_cookie")) // && !Users::check_cookie(cookies.get("login_cookie").value, "../../db/Users.db3")
+        {
+
+            response.headers().add<Pistache::Http::Header::Location>("/");
+            response.send(Pistache::Http::Code::See_Other);
+        }
+        if(!Users::check_cookie(cookies.get("login_cookie").value, "../../db/Users.db3")) // 
+        {
+
+            response.headers().add<Pistache::Http::Header::Location>("/");
+            response.send(Pistache::Http::Code::See_Other);
+        }
     
     
 

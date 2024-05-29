@@ -22,6 +22,7 @@ FetchContent_MakeAvailable(Pistache)
 
 set(SOURCES 
   "main.cpp" 
+  "generator.cpp" 
   "user.cpp" 
   "services.cpp" 
   "logs.cpp" 
