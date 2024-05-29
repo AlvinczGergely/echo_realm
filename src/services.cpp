@@ -15,6 +15,7 @@ void Services::config_routes(Pistache::Rest::Router& chat_router)
     Pistache::Rest::Routes::Get(chat_router, "/", Pistache::Rest::Routes::bind(&Services::get_login_site));
     Pistache::Rest::Routes::Post(chat_router, "/login", Pistache::Rest::Routes::bind(&Services::login_handler));
     Pistache::Rest::Routes::Get(chat_router, "/chatsite", Pistache::Rest::Routes::bind(&Services::get_chat_site));
+    Pistache::Rest::Routes::Post(chat_router, "/log_out", Pistache::Rest::Routes::bind(&Services::log_out_handler));
 }
 
 void Services::is_port_used(int port_num)
@@ -271,3 +272,27 @@ void Services::get_chat_site(const Request &request, Response response)
         Logs::write_log_data_exception("              function: get_chat_site, ", e);
     }
 }
+
+void Services::log_out_handler(const Pistache::Rest::Request &request, Pistache::Http::ResponseWriter response)
+{
+    Logs::write_log_data("POST request, function: log_out_handler");
+
+    try 
+    {
+        auto cookies = request.cookies ();
+        auto cookie_token = cookies.get("login_cookie");
+        std::string login_cookie = cookie_token.value;
+
+        Users::remove_cookie(login_cookie, "../../db/Users.db3"); 
+    
+        response.headers ().add<Pistache::Http::Header::Location> ("/");
+        response.headers ().addRaw(Pistache::Http::Header::Raw{"HX-Redirect", ""});
+        response.send (Pistache::Http::Code::See_Other);
+    } 
+    catch(const std::exception &e) 
+    {
+
+        Logs::write_log_data_exception("              function: log_out_handler, ", e);  
+    }
+}
+

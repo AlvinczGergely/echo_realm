@@ -82,3 +82,19 @@ bool Users::check_cookie(std::string cookie, std::string file_location)
   }
   return false;
 }
+
+bool Users::remove_cookie(std::string cookie_value, std::string file_location)
+{
+  Logs::write_log_data("              function: delete_cookie");
+
+  SQLite::Database db(file_location, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+
+  SQLite::Transaction transaction (db);
+  SQLite::Statement query (db, "UPDATE Users SET cookie = NULL where cookie = ?");
+  query.bind(1, cookie_value);
+
+  query.exec();
+  transaction.commit();
+
+  return true;
+}

@@ -19,6 +19,7 @@ namespace Services
     void login_handler(const Request &request, Response response);
     void get_chat_site(const Request &request, Response response);
     static bool is_valid_session(const Request &request);
+    void log_out_handler(const Request &request, Response response); 
 };
 
 #endif
