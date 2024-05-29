@@ -80,6 +80,27 @@ bool Users::valid_password(std::string email_address, std::string password, std:
   return false;
 }
 
+bool Users::email_alredy_taken(std::string email_address, std::string file_location)
+{
+  Logs::write_log_data("              function: email_alredy_taken");
+
+  SQLite::Database db(file_location, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+
+  SQLite::Statement query(db, "SELECT email_address FROM Users");
+
+  while (query.executeStep ())
+  {
+    std::string current_email_address = query.getColumn (0);
+
+    if (current_email_address == email_address)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool Users::check_cookie(std::string cookie, std::string file_location)
 {
   Logs::write_log_data("              function: check_cookie");

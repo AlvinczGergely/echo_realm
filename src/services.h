@@ -20,6 +20,10 @@ namespace Services
     void registration_handler(const Request &request, Response response);
     void get_chat_site(const Request &request, Response response);
     static bool is_valid_session(const Request &request);
+    void reg_email_validation(const Request &request, Response response);
+    void reg_name_validation(const Request &request, Response response);
+    void reg_password_validation(const Request &request, Response response);
+    void reg_confirm_validation(const Request &request, Response response);
     void log_out_handler(const Request &request, Response response); 
 };
 

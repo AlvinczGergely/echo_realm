@@ -16,6 +16,10 @@ void Services::config_routes(Pistache::Rest::Router& chat_router)
     Pistache::Rest::Routes::Post(chat_router, "/login", Pistache::Rest::Routes::bind(&Services::login_handler));
     Pistache::Rest::Routes::Get(chat_router, "/chatsite", Pistache::Rest::Routes::bind(&Services::get_chat_site));
     Pistache::Rest::Routes::Post(chat_router, "/registration", Pistache::Rest::Routes::bind(&Services::registration_handler));
+    Pistache::Rest::Routes::Post(chat_router, "/reg/name", Pistache::Rest::Routes::bind(&Services::reg_name_validation));
+    Pistache::Rest::Routes::Post(chat_router, "/reg/email", Pistache::Rest::Routes::bind(&Services::reg_email_validation));
+    Pistache::Rest::Routes::Post(chat_router, "/reg/password", Pistache::Rest::Routes::bind(&Services::reg_password_validation));
+    Pistache::Rest::Routes::Post(chat_router, "/reg/comfirm_password", Pistache::Rest::Routes::bind(&Services::reg_confirm_validation));
     Pistache::Rest::Routes::Post(chat_router, "/log_out", Pistache::Rest::Routes::bind(&Services::log_out_handler));
 }
 
@@ -274,6 +278,192 @@ void Services::get_chat_site(const Request &request, Response response)
     }
 }
 
+void Services::reg_email_validation(const Request &request, Response response)
+{
+    try {
+        std::string body_data = url_decode(request.body());
+
+        std::string user_name = body_data.substr(5, body_data.find ("&") - 5);
+        std::string first_arese = body_data.erase(0, body_data.find ("&") + 1);
+        std::string email_addres = first_arese.substr(6, body_data.find ("&") - 6);
+
+        Logs::write_log_data("POST request, function: reg_email_validation", email_addres);
+
+        std::regex pattern("^\\w+.\\w+@\\w+.com$");
+        bool valid_email = std::regex_match (email_addres, pattern);
+
+        if (Users::email_alredy_taken(email_addres, "../../db/Users.db3") == true)
+        {
+            std::string email_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+				<input type="email" name="email" value=")" + email_addres + R"(" placeholder="Email" hx-post="/reg/email" hx-indicator="#ind"/>
+                <div class='error-message' >This email addres is alredy taken.</div>
+            </div>
+            )";
+
+            response.send(Http::Code::Ok, email_part);
+            return;
+        }
+        if (valid_email == true)
+        {
+            std::string email_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+				<input type="email" name="email" value=")" + email_addres + R"(" placeholder="Email" hx-post="/reg/email" hx-indicator="#ind"/>
+		    </div>
+            )";
+
+            response.send(Http::Code::Ok, email_part);
+            return;
+        }
+        if (valid_email == false)
+        {
+            std::string email_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+				<input type="email" name="email" value=")" + email_addres + R"(" placeholder="Email" hx-post="/reg/email" hx-indicator="#ind"/>
+                <div class='error-message' >Please enter a valid email address.</div>
+            </div>
+            )";
+
+            response.send(Http::Code::Ok, email_part);
+            return;
+        }
+        } 
+        catch (const std::exception &e) 
+        {
+            Logs::write_log_data_exception("              function: reg_email_validation, ", e);
+        }
+
+}
+
+void Services::reg_name_validation(const Request &request, Response response)
+{
+    try 
+    {
+        std::string body_data = url_decode(request.body());
+        std::string user_name = body_data.substr(5, body_data.find("&") - 5);
+
+        Logs::write_log_data("POST request, function: reg_name_validation", user_name);
+
+        std::regex pattern("^[A-Z][a-z]+\\s[A-Z][a-z]+$");
+        bool name_validating = std::regex_match(user_name, pattern);
+
+        if (name_validating == true)
+        {
+            std::string name_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+                <input type="text" name="name" value=")" + user_name + R"(" placeholder="Name" hx-post="/reg/name" hx-indicator="#ind"/>
+            </div>
+            )";
+
+            response.send(Http::Code::Ok, name_part);
+        }
+        else
+        {
+            std::string name_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+                <input type="text" name="name" value=")" + user_name + R"(" placeholder="Name" hx-post="/reg/name" hx-indicator="#ind"/>
+                <div class='error-message' >Your name should contain 2 words start with apper letters.</div>
+            </div>
+            )";
+
+        response.send(Http::Code::Ok, name_part);
+        }
+    } 
+    catch (const std::exception &e) 
+    {
+        Logs::write_log_data_exception("              function: reg_name_validation, ", e);
+    }
+    }
+
+void Services::reg_password_validation(const Request &request, Response response)
+{
+    try 
+    {
+        Logs::write_log_data("POST request, function: reg_password_validation");
+
+        std::string body_data = url_decode(request.body());
+
+        std::string user_name = body_data.substr(5, body_data.find ("&") - 5);
+        std::string first_arese = body_data.erase(0, body_data.find ("&") + 1);
+        std::string email_addres = first_arese.substr(6, body_data.find ("&") - 6);
+        std::string second_erase = first_arese.erase(0, first_arese.find ("&") + 1);
+        std::string password = second_erase.substr(9, second_erase.find ("&") - 9);
+
+        std::regex pattern("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$");
+        bool valid_password = std::regex_match(password, pattern);
+
+        if (valid_password == true)
+        {
+            std::string password_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+			    <input type="password" name="password" value=")" + password + R"(" placeholder="Password" hx-post="/reg/passweord" hx-indicator="#ind"/>
+		    </div>
+            )";
+
+            response.send (Http::Code::Ok, password_part);
+        }
+        else
+        {
+            std::string password_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+			    <input type="password" name="password" value=")" + password + R"(" placeholder="Password" hx-post="/reg/passweord" hx-indicator="#ind"/>
+                <div class='error-message' >Minimum eight characters, at least one uppercase letter, one lowercase letter and one number.</div>
+            </div>
+            )";
+
+            response.send(Http::Code::Ok, password_part);
+        }
+    } 
+    catch (const std::exception &e) 
+    {
+        Logs::write_log_data_exception("              function: reg_password_validation, ", e);
+    }
+}
+
+void Services::reg_confirm_validation(const Request &request, Response response)
+{
+   try {
+        std::string body_data = url_decode (request.body());
+
+        std::string user_name = body_data.substr(5, body_data.find ("&") - 5);
+        std::string first_erase = body_data.erase( 0, body_data.find ("&") + 1);
+        std::string email_address = first_erase.substr(6, body_data.find ("&") - 6);
+        std::string second_erase = first_erase.erase(0, first_erase.find ("&") + 1);
+        std::string password = second_erase.substr(9, second_erase.find ("&") - 9);
+        std::string third_erase = first_erase.erase( 0, first_erase.find ("&") + 1);
+        std::string confirm_password = third_erase.substr(third_erase.find ("=") + 1);
+        
+        Logs::write_log_data("POST request, function: reg_confirm_validation", email_address);
+
+        if (password == confirm_password)
+        {
+            std::string confimr_password_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+			    <input type="password" name="repeta_password" value=")" + confirm_password + R"(" placeholder="Repeta password" hx-post="/reg/comfirm_passweord" hx-indicator="#ind"/>
+		    </div>
+            )";
+
+            response.send(Http::Code::Ok, confimr_password_part);
+        }
+        else
+        {
+            std::string confimr_password_part = R"(
+            <div hx-target="this" hx-swap="outerHTML">
+			    <input type="password" name="repeta_password" value=")" + confirm_password + R"(" placeholder="Repeta password" hx-post="/reg/comfirm_passweord" hx-indicator="#ind"/>
+                <div class='error-message' >Your two password should be the same.</div>       
+            </div>
+            )";
+
+            response.send(Http::Code::Ok, confimr_password_part);
+        }
+    } 
+
+    catch (const std::exception &e) 
+    {
+        Logs::write_log_data_exception("              function: reg_confirm_validation, ", e);
+    }
+}
+
 void Services::registration_handler(const Request &request, Response response)
 {
     try {
@@ -353,14 +543,8 @@ void Services::registration_handler(const Request &request, Response response)
 
         Users::insert_user(email_addres, password, user_name, "../../db/Users.db3");
 
-        std::string registration_part = R"(
-            <div hx-target="this" hx-swap="outerHTML">
-			    <button type="submit" hx-post="/registration" hx-include="closest form" hx-trigger="click">Sign Up</button>
-                <div class='error-message'>Registration_was_successful!</div>
-            </div>
-            )";
-
-        response.send(Http::Code::Ok, registration_part);
+        response.headers().add<Pistache::Http::Header::Location>("/chatsite");
+        response.send(Pistache::Http::Code::See_Other);
     } 
     catch (const std::exception &e) 
     {
