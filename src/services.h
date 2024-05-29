@@ -17,6 +17,7 @@ namespace Services
     Pistache::Http::Cookie login_cookie_generator(std::string email);
     void get_login_site(const Request &request, Response response);
     void login_handler(const Request &request, Response response);
+    void registration_handler(const Request &request, Response response);
     void get_chat_site(const Request &request, Response response);
     static bool is_valid_session(const Request &request);
     void log_out_handler(const Request &request, Response response); 

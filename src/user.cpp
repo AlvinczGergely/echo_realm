@@ -3,6 +3,23 @@
 #include "logs.h"
 
 
+void Users::insert_user(std::string email_address, std::string password, std::string user_name, std::string file_location) 
+{
+  Logs::write_log_data("              function: insert_user");
+
+  SQLite::Database db(file_location, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+
+  SQLite::Transaction transaction (db);
+  SQLite::Statement query (db, "INSERT INTO Users (email_address, password, user_name, cookie) VALUES (?, ?, ?, ?)");
+  query.bind(1, email_address);
+  query.bind(2, password);
+  query.bind(3, user_name);
+  query.bind(4);
+
+  query.exec();
+  transaction.commit(); 
+}
+
 void Users::insert_cookie(std::string email_address, std::string cookie, std::string file_location)
 {
   Logs::write_log_data("              function: insert_cookie_into_users");

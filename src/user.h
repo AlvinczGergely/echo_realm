@@ -3,6 +3,7 @@
 
 namespace Users
 {
+  void insert_user(std::string email_address, std::string password, std::string user_name, std::string file_location);
   bool valid_user(std::string email_address, std::string file_location);
   bool valid_password(std::string email_address, std::string password, std::string file_location);
   void insert_cookie (std::string email_address, std::string cookie, std::string file_location);
