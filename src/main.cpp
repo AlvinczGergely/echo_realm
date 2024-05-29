@@ -1,5 +1,6 @@
 #include "services.h"
 #include "logs.h"
+#include <SQLiteCpp/SQLiteCpp.h>
 #include <thread>
 #include <exception>
 using namespace Pistache;
@@ -21,6 +22,11 @@ int main()
     end_point.setHandler(chat_router.handler());
 
     end_point.serve();
+  }
+  catch (const SQLite::Exception &e)
+  {
+    std::cout << "sqlite exception: " << e.what() << std::endl;
+    return 1;
   }
   catch (const std::exception &e)
   {

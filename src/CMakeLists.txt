@@ -5,6 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
+set(SQLITECPP_RUN_CPPLINT OFF CACHE INTERNAL "") 
+FetchContent_Declare(
+  SQLiteCpp
+  GIT_REPOSITORY https://github.com/SRombauts/SQLiteCpp.git
+  GIT_TAG        3.3.1
+)
+FetchContent_MakeAvailable(SQLiteCpp)
+
 FetchContent_Declare(
   Pistache
   GIT_REPOSITORY https://github.com/pistacheio/pistache.git
@@ -14,6 +22,7 @@ FetchContent_MakeAvailable(Pistache)
 
 set(SOURCES 
   "main.cpp" 
+  "user.cpp" 
   "services.cpp" 
   "logs.cpp" 
   )
@@ -21,9 +30,12 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
+    SQLiteCpp
+    sqlite3
     pistache
   )
 target_include_directories(${PROJECT_NAME} PRIVATE 
+  ${SQLiteCpp_SOURCE_DIR}/include
   ${Pistache_SOURCE_DIR}/include
   )
 
