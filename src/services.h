@@ -16,6 +16,7 @@ namespace Services
     static std::string url_decode(std::string body_str);
     void get_login_site(const Request &request, Response response);
     void login_handler(const Request &request, Response response);
+    void get_chat_site(const Request &request, Response response);
 };
 
 #endif

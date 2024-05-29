@@ -13,6 +13,7 @@ void Services::config_routes(Pistache::Rest::Router& chat_router)
 
     Pistache::Rest::Routes::Get(chat_router, "/", Pistache::Rest::Routes::bind(&Services::get_login_site));
     Pistache::Rest::Routes::Post(chat_router, "/login", Pistache::Rest::Routes::bind(&Services::login_handler));
+    Pistache::Rest::Routes::Get(chat_router, "/chatsite", Pistache::Rest::Routes::bind(&Services::get_chat_site));
 }
 
 void Services::is_port_used(int port_num)
@@ -154,8 +155,9 @@ void Services::login_handler(const Request &request, Response response)
         }
         else
         {
-
-            response.send(Http::Code::Ok, "login was successful");
+            response.headers().add<Pistache::Http::Header::Location>("/chatsite");
+            response.headers().addRaw(Pistache::Http::Header::Raw{"HX-Redirect", ""});
+            response.send(Pistache::Http::Code::See_Other);
         }
     } 
     catch (const std::exception &e) 
@@ -175,4 +177,32 @@ void Services::login_handler(const Request &request, Response response)
         Logs::write_log_data_exception("              function: login_handler, ", e);
     }
 
+}
+
+void Services::get_chat_site(const Request &request, Response response)
+{
+    try {
+        Logs::write_log_data(" GET request, function: get_chat_site");
+
+    
+    
+
+        std::string htmlContent;
+        std::ifstream htmlFile("../../frontend/chatsite/index.html");
+        std::getline(htmlFile, htmlContent, '\0');
+
+        std::string cssContent;
+        std::ifstream cssFile("../../frontend/chatsite/style.css");
+        std::getline(cssFile, cssContent, '\0');
+
+        htmlContent += "\n<style>" + cssContent + "</style>";
+
+        response.headers().add<Pistache::Http::Header::ContentType>(MIME(Text, Html));
+
+        response.send(Http::Code::Ok, htmlContent);
+    } 
+    catch (const std::exception &e) 
+    {
+        Logs::write_log_data_exception("              function: get_chat_site, ", e);
+    }
 }
